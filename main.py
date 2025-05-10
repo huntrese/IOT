@@ -5,7 +5,7 @@ import cv2
 webcam = cv2.VideoCapture(0) 
 
 # Start a while loop 
-while(1): 
+while(1):
 	
 	# Reading the video from the 
 	# webcam in image frames 
