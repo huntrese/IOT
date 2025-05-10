@@ -4,16 +4,26 @@ Follow these steps to set up the project environment:
 
 ## 1. Install `uv`
 
-First, install [`uv`](https://github.com/astral-sh/uv), a fast Python package manager:
+Install [`uv`](https://github.com/astral-sh/uv), a fast Python package manager:
 
 ```bash
 pip install uv
 ```
 
-## 2. Sync dependencies
+## 2. Sync Dependencies
 
-Next, install all project dependencies as defined in `pyproject.toml` and `requirements.txt`:
+Install all project dependencies defined in `pyproject.toml` and `requirements.txt`:
 
 ```bash
 uv sync
 ```
+
+## 3. Running the RTSP Server
+
+To run the RTSP server, use the following Docker command:
+
+```bash
+docker run --rm -p 8554:8554 aler9/rtsp-simple-server
+```
+
+This will start the server on port `8554`.
