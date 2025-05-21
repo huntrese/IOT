@@ -1,7 +1,7 @@
 import cv2
 import subprocess
 
-def start_stream(rtsp_url="rtsp://localhost:8554/stream", camera_index=0):
+def start_stream(rtsp_url="rtsp://localhost:8554/stream", camera_index="http://10.44.3.130:8080/video"):
     # Open the camera
     cap = cv2.VideoCapture(camera_index)
 
