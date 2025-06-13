@@ -1,31 +1,48 @@
 import cv2
 import subprocess
+import socket
 
-def start_stream(rtsp_url="rtsp://localhost:8554/stream", camera_index="http://10.44.3.130:8080/video"):
+def get_local_ip():
+    try:
+        # Get the local machine's IP address
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "0.0.0.0"
+
+def start_stream(output_dir="stream", camera_index=0):
     # Open the camera
     cap = cv2.VideoCapture(camera_index)
-
-    # Define ffmpeg command to push to RTSP
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))  # Use MJPEG codec for lower latency
+    
+    local_ip = get_local_ip()
+    
+    # Define ffmpeg command for HLS
     ffmpeg_cmd = [
         'ffmpeg',
         '-y',
         '-f', 'rawvideo',
         '-vcodec', 'rawvideo',
         '-pix_fmt', 'bgr24',
-        '-s', f"{int(cap.get(3))}x{int(cap.get(4))}",  # width x height
-        '-r', '25',  # frames per second
-        '-i', '-',  # Input from stdin
+        '-s', f"{int(cap.get(3))}x{int(cap.get(4))}",
+        '-r', '25',
+        '-i', '-',
         '-c:v', 'libx264',
         '-preset', 'veryfast',
-        '-f', 'rtsp',
-        '-rtsp_transport', 'tcp',  # Use TCP transport for more stable connections
-        rtsp_url
+        '-hls_time', '2',
+        '-hls_list_size', '5',
+        '-hls_flags', 'delete_segments',
+        '-f', 'hls',
+        f'{output_dir}/stream.m3u8'  # This path must match the server's path
     ]
 
     # Start ffmpeg subprocess
     process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
 
-    print(f"🚀 Streaming camera feed to {rtsp_url}")
+    print(f"🚀 Streaming at http://{local_ip}:8000/stream.m3u8")  # Fixed URL path
 
     try:
         while True:
@@ -33,13 +50,10 @@ def start_stream(rtsp_url="rtsp://localhost:8554/stream", camera_index="http://1
             if not ret:
                 print("⚠️ Failed to grab frame")
                 break
-
-            # Write frame to ffmpeg stdin
             process.stdin.write(frame.tobytes())
 
     except KeyboardInterrupt:
         print("🛑 Stopping stream...")
-
     finally:
         cap.release()
         process.stdin.close()
